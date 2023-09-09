@@ -167,25 +167,35 @@ app.get("/purchases/products/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 app.get("/purchases", async (req, res) => {
   try {
     const { shop, product, sort } = req.query;
     let sql = "SELECT * FROM purchases";
 
-    let shopIds = Array.isArray(shop) ? shop.map(Number) : [Number(shop)];
+    let shopIds = [];
+    if (shop) {
+      shopIds = Array.isArray(shop)
+        ? shop.map(id => (id ? Number(id.match(/\d+/)[0]) : undefined))
+        : [Number(shop.match(/\d+/)[0])];
+      shopIds = shopIds.filter(id => !isNaN(id));
+    }
 
-    shopIds = shopIds.filter((id) => !isNaN(id));
+    let productIds = [];
+    if (product) {
+      productIds = Array.isArray(product)
+        ? product.map(id => (id ? Number(id.match(/\d+/)[0]) : undefined))
+        : [Number(product.match(/\d+/)[0])];
+      productIds = productIds.filter(id => !isNaN(id));
+    }
 
-    const conditions = [];
+    let conditions = [];
 
     if (shopIds.length > 0) {
       conditions.push(`shopid IN (${shopIds.join(",")})`);
     }
 
-    if (product) {
-      const productId = +product;
-      conditions.push(`productid = ${productId}`);
+    if (productIds.length > 0) {
+      conditions.push(`productid IN (${productIds.join(",")})`);
     }
 
     if (conditions.length > 0) {
@@ -219,6 +229,8 @@ app.get("/purchases", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
 
 
 
